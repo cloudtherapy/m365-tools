@@ -27,7 +27,7 @@ function Confirm-GroupAttributes {
         Write-Output "Group '$($DisplayName)' appears to have been created independently of Orchestry"
     }
 
-    # Check Mail Nickname is derivative of Display Name
+    # Check SMTP Primary Address is derivative of Display Name
     $expectedName = $DisplayName.ToLower() -replace ' ','-' -replace '\+g|\&|,' -replace '--','-'
     $expectedName += '@cetechllc.com'
     if ($PrimarySmtpAddress -eq $expectedName) {

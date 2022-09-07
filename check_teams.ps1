@@ -1,5 +1,8 @@
 ﻿#Requires -Modules ExchangeOnlineManagement, MicrosoftTeams
 
+[CmdletBinding()]
+param()
+
 # Verify connection to MS Teams or establish new
 try {
    $null = Get-CsTenant
@@ -37,5 +40,10 @@ function Confirm-GroupAttributes {
 }
 
 Get-Team | ForEach-Object {
-   Confirm-GroupAttributes -DisplayName "$($_.DisplayName)" -MailNickName "$($_.MailNickName)"
+    if($_.DisplayName -clike 'ARCHIVED*') {
+        Write-Verbose "INFORMATION: Ignoring archived Team: $($_.DisplayName)"
+        continue
+    } else {
+        Confirm-GroupAttributes -DisplayName "$($_.DisplayName)" -MailNickName "$($_.MailNickName)"
+    }
 }

@@ -5,10 +5,20 @@ param()
 
 # Verify connection to MS Teams or establish new
 try {
-   $null = Get-CsTenant
+    $null = Get-CsTenant
 } catch {
+    Write-Host "[Connecting to  Microsoft Teams]"
     $null = Connect-MicrosoftTeams
 }
+
+# Verify connection to Exchange online or establish new
+try {
+    $null = Get-UnifiedGroup
+} catch {
+    Write-Host "[Connecting to Exchange Online]"
+    $null = Connect-ExchangeOnline -ShowBanner:$false
+}
+    
 
 function Confirm-GroupAttributes {
     [CmdletBinding()]
@@ -17,11 +27,15 @@ function Confirm-GroupAttributes {
         [string] $DisplayName,
         
         [Parameter()]
-        [string] $MailNickName
+        [string] $MailNickName,
+
+        [Parameter()]
+        [string] $SmtpAddress
     )
     # Initialize Checks
     $validDisplayName = $False
     $validMailNickName = $False
+    $validSmtpAddress = $False
 
     # Check Display Name is created by Orchestry. Should start with ORG- or PRJ-
     if (($DisplayName -clike 'PRJ-*') -or ($DisplayName -clike 'ORG-*')) {
@@ -37,6 +51,15 @@ function Confirm-GroupAttributes {
     } else {
         Write-Output "Team '$($DisplayName)' mail nickname '$($MailNickName)' does not match expected name '$($expectedName)'"
     }
+
+    # Check SMTP Primary Address is derivative of Display Name
+    $expectedAddress = $DisplayName.ToLower() -replace ' ','-' -replace '\+g|\&|,' -replace '--','-'
+    $expectedAddress += '@cetechllc.com'
+    if ($SmtpAddress -eq $expectedName) {
+        $validSmtpAddress = $True
+    } else {
+        Write-Output "Group '$($DisplayName)' smtp address '$($SmtpAddress)' does not match expected address '$($expectedAddress)'"
+    }
 }
 
 Get-Team | ForEach-Object {
@@ -44,6 +67,7 @@ Get-Team | ForEach-Object {
         Write-Verbose "INFORMATION: Ignoring archived Team: $($_.DisplayName)"
         continue
     } else {
-        Confirm-GroupAttributes -DisplayName "$($_.DisplayName)" -MailNickName "$($_.MailNickName)"
+        $smtpAddress = (Get-unifiedGroup $_.DisplayName).PrimarySmtpAddress
+        Confirm-GroupAttributes -DisplayName "$($_.DisplayName)" -MailNickName "$($_.MailNickName)" -SmtpAddress $smtpAddress
     }
 }

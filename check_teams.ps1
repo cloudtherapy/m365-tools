@@ -7,7 +7,7 @@ param()
 try {
     $null = Get-CsTenant
 } catch {
-    Write-Host "[Connecting to  Microsoft Teams]"
+    Write-Host "[Connecting to Microsoft Teams]"
     $null = Connect-MicrosoftTeams
 }
 
